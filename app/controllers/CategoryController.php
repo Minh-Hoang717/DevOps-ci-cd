@@ -1,7 +1,5 @@
 <?php
-// app/controllers/CategoryController.php
 session_start();
-// Sửa đường dẫn require cho đúng với vị trí file
 require_once __DIR__ . '/../models/CategoryModel.php';
 require_once __DIR__ . '/../models/AdminModel.php';
 
@@ -18,7 +16,6 @@ class CategoryController
 
     public function index()
     {
-        // Khởi tạo biến thông báo để tránh lỗi Undefined variable ở View
         $addMsg = '';
 
         // --- XỬ LÝ LOGIN ---
@@ -29,7 +26,6 @@ class CategoryController
             );
             if ($admin) {
                 $_SESSION['admin'] = $admin;
-                // Refresh lại trang để nhận session
                 header("Location: index.php");
                 exit;
             } else {
@@ -37,11 +33,10 @@ class CategoryController
             }
         }
 
-        // --- THÊM PHẦN NÀY: XỬ LÝ LOGOUT ---
         if (isset($_GET['action']) && $_GET['action'] == 'logout') {
             unset($_SESSION['admin']);
             session_destroy();
-            header("Location: index.php"); // Load lại trang, nó sẽ tự nhảy vào form login
+            header("Location: index.php");
             exit;
         }
 

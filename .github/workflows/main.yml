@@ -43,5 +43,4 @@ jobs:
         with:
           context: .
           push: true
-          # Image sẽ được đặt tên là: tên-docker-của-bạn/bookstore-app
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/bookstore-app:latest
