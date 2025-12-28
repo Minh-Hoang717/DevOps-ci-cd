@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Service 1: Ứng dụng PHP của bạn
+  app:
+    build: .
+    image: my-bookstore-app:latest # Tên Image sẽ tạo
+    ports:
+      - "8080:80" # Chạy ở localhost:8080
+    environment:
+      - DB_HOST=db # Trỏ sang service bên dưới
+      - DB_NAME=d2_
+      - DB_USER=root
+      - DB_PASS=rootpassword
+    depends_on:
+      - db
+
+  # Service 2: Database MySQL
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: d2_
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Tự động chạy file SQL
+    ports:
+      - "3306:3306"
+
+volumes:
+  db_data:
