@@ -1,5 +1,9 @@
 <?php
 // public/index.php
+// THÊM 3 DÒNG NÀY ĐỂ DEBUG
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 // 1. Load các file cấu hình và core cần thiết
 require_once __DIR__ . '/../app/core/Db.php';

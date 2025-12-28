@@ -1,6 +1,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Chuyển hướng mọi request vào thư mục public
-    RewriteRule ^$ public/ [L]
-    RewriteRule (.*) public/$1 [L]
+    
+    # Nếu file hoặc thư mục tồn tại thì không chuyển hướng (để load ảnh, css...)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Tất cả request khác đều chuyển về index.php
+    RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>

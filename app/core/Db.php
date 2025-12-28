@@ -1,25 +1,25 @@
 <?php
 // app/core/Db.php
 
-// Ưu tiên lấy từ biến môi trường (Environment Variable), nếu không có thì dùng giá trị mặc định
-define("HOST", getenv('DB_HOST') ?: "localhost");
-define("DB_NAME", getenv('DB_NAME') ?: "d2_");
-define("DB_USER", getenv('DB_USER') ?: "root");
-define("DB_PASS", getenv('DB_PASS') ?: "");
-
 class Db {
     public static function getConnection() {
+        // QUAN TRỌNG: Trong Docker, host không phải là "localhost" mà là tên service "db"
+        $servername = getenv('DB_HOST') ?: 'db'; 
+        $username = getenv('DB_USER') ?: 'root';
+        $password = getenv('DB_PASS') ?: 'rootpassword'; // Pass này phải khớp với docker-compose.yml
+        $dbname = getenv('DB_NAME') ?: 'd2_';
+
         try {
             $conn = new PDO(
-                "mysql:host=" . HOST . ";dbname=" . DB_NAME . ";charset=utf8",
-                DB_USER,
-                DB_PASS
+                "mysql:host=$servername;dbname=$dbname;charset=utf8",
+                $username,
+                $password
             );
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             return $conn;
         } catch (PDOException $e) {
-            // Trong môi trường Production, không nên echo lỗi chi tiết ra màn hình
-            die("Kết nối thất bại. Vui lòng kiểm tra cấu hình Database.");
+            // Echo lỗi ra để debug (chỉ dùng lúc dev)
+            die("Lỗi kết nối DB: " . $e->getMessage()); 
         }
     }
 }

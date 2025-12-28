@@ -1,10 +1,6 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    
-    # Nếu request là file thực (ảnh, css, js) hoặc thư mục thực thì cho qua
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    
-    # Còn lại chuyển hết về index.php
     RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>

@@ -2,64 +2,46 @@ name: CI/CD Pipeline
 
 on:
   push:
+    branches: [ "main" ] # Pipeline sẽ chạy mỗi khi có code mới đẩy vào nhánh main
+  pull_request:
     branches: [ "main" ]
 
 jobs:
-  # JOB 1: KIỂM TRA CHẤT LƯỢNG CODE (SIMULATION)
+  # JOB 1: KIỂM TRA CHẤT LƯỢNG CODE (CI)
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Syntax Check (Linting)
-      run: find . -name "*.php" -print0 | xargs -0 -n1 php -l
-      # Lệnh này sẽ kiểm tra cú pháp toàn bộ file PHP, nếu sai cú pháp Pipeline sẽ dừng ngay.
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-  # JOB 2: ĐÓNG GÓI VÀ ĐẨY LÊN KHO CHỨA
-  build-push:
-    needs: test # Phải test xong mới build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }} # Cần cài trong Settings GitHub
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - name: Build and Push Docker Image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/bookstore-app:latest
-
-  # JOB 3: TRIỂN KHAI (DEPLOY) - GIẢ LẬP QUA SSH
-  # Nếu bạn không có VPS thật, bạn có thể bỏ qua Job này hoặc 
-  # chỉ demo đến bước Build-Push là đã rất tốt rồi.
-  deploy:
-    needs: build-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@master
+      - name: Setup PHP Environment
+        uses: shivammathur/setup-php@v2
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            # Pull image mới nhất về
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/bookstore-app:latest
-            # Chạy lại container (đây là lệnh ví dụ, thực tế cần file docker-compose trên server)
-            docker stop my-app || true
-            docker rm my-app || true
-            docker run -d --name my-app -p 80:80 \
-            -e DB_HOST=${{ secrets.DB_HOST }} \
-            -e DB_USER=${{ secrets.DB_USER }} \
-            -e DB_PASS=${{ secrets.DB_PASS }} \
-            --link my-mysql:db \
-            ${{ secrets.DOCKERHUB_USERNAME }}/bookstore-app:latest
+          php-version: '8.1'
+
+      - name: Check Syntax Error (Linting)
+        # Lệnh này tìm tất cả file .php và kiểm tra cú pháp
+        # Nếu file nào thiếu dấu ; hoặc viết sai, Pipeline sẽ BÁO ĐỎ và DỪNG NGAY.
+        run: find . -name "*.php" -print0 | xargs -0 -n1 php -l
+
+  # JOB 2: ĐÓNG GÓI & PHÁT HÀNH (CD)
+  build-and-push:
+    needs: test # Chỉ chạy khi JOB 1 (Test) đã Xanh
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          # Image sẽ được đặt tên là: tên-docker-của-bạn/bookstore-app
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/bookstore-app:latest
